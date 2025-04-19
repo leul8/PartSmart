@@ -3,7 +3,7 @@
 PartSmart is a comprehensive platform for purchasing car parts and accessories. It allows users to search for car parts, validate part numbers, and browse products from various manufacturers. The platform also supports multilingual options, including English and Amharic. PartSmart leverages **CORS Proxy** to validate part numbers against RockAuto's data, integrates **Mapbox** for geographic location services, and uses **Gemini AI** to generate detailed product descriptions.
 
 ### Available Online:
-You can access the platform online at [partsmart.com.et](https://partsmart.com.et/).
+You can access the platform online at [PartSmart.com.et](https://partsmart.com.et/).
 
 ## Features
 
