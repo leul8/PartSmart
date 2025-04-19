@@ -1,23 +1,32 @@
-// Import necessary Firestore methods (modular imports)
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
 
-// Your Firebase config object (replace with your actual config)
+// Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyAiLLCZ5CDR9BVcb4Y_Q2DNZSS8Mw8Lnvk",
-    authDomain: "e-com-8d439.firebaseapp.com",
-    projectId: "e-com-8d439",
-    storageBucket: "e-com-8d439.firebasestorage.app",
-    messagingSenderId: "165745261186",
-    appId: "1:165745261186:web:b40d6e4980ac8885d5929b",
-    measurementId: "G-CTGLVTZJLX"
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: "",
+  measurementId: ""
 };
 
-// Initialize Firebase app and Firestore
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-export const searchAction = (keyword, searchType) => async (dispatch) => {
+// Search action with type-based filtering
+export const searchAction = (keyword, searchType = 'general') => async (dispatch) => {
+  // Clear search if keyword is empty
+  if (!keyword.trim()) {
+    dispatch({ type: 'HAS_SEARCHED', payload: false });
+    dispatch({ type: 'SEARCH', payload: [] });
+    return;
+  }
+
+  dispatch({ type: 'HAS_SEARCHED', payload: true });
+
   try {
     const productsRef = collection(db, 'Products');
     const snapshot = await getDocs(productsRef);
@@ -27,12 +36,10 @@ export const searchAction = (keyword, searchType) => async (dispatch) => {
     let filtered = [];
 
     if (searchType === "partNumber") {
-      // Filter only by partNumber
       filtered = allProducts.filter((item) =>
         item.partNumber?.toLowerCase().includes(lowerKeyword)
       );
     } else {
-      // General search across multiple fields
       filtered = allProducts.filter((item) =>
         item.title?.toLowerCase().includes(lowerKeyword) ||
         item.description?.toLowerCase().includes(lowerKeyword) ||

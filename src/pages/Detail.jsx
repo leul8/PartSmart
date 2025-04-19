@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "/home/leul/Desktop/s/src/components/Firebase.js";
+import { doc, getDoc, collection, addDoc, onSnapshot, serverTimestamp, query, where } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { db, auth } from "/home/leul/Desktop/s/src/components/Firebase.js";
 import { CgMathMinus, CgMathPlus } from "react-icons/cg";
 import { cartAction } from "../redux/actions/cart";
-import { useTranslation } from 'react-i18next';  
+import { useTranslation } from 'react-i18next';
 
 function Detail() {
-  const { t } = useTranslation();  
+  const { t } = useTranslation();
   const { id } = useParams();
   const dispatch = useDispatch();
   const { product } = useSelector((state) => state.productDetail);
@@ -17,6 +18,16 @@ function Detail() {
   const [productData, setProductData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [user, setUser] = useState(null);
+  const [review, setReview] = useState("");
+  const [reviews, setReviews] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -24,20 +35,28 @@ function Detail() {
       try {
         const productDocRef = doc(db, "Products", id);
         const productDocSnap = await getDoc(productDocRef);
-
         if (productDocSnap.exists()) {
           setProductData(productDocSnap.data());
         } else {
           console.log("No such document!");
         }
       } catch (error) {
-        console.error("Error fetching document:", error);
+        console.error("Error fetching product:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProduct();
+  }, [id]);
+
+  useEffect(() => {
+    const q = query(collection(db, "Reviews"), where("productId", "==", id));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const reviewData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setReviews(reviewData);
+    });
+    return () => unsubscribe();
   }, [id]);
 
   const increment = () => {
@@ -58,8 +77,24 @@ function Detail() {
     }
   };
 
+  const handlePostReview = async () => {
+    if (!review.trim() || !user) return;
+    try {
+      await addDoc(collection(db, "Reviews"), {
+        text: review,
+        productId: id,
+        uid: user.uid,
+        username: user.displayName || "Anonymous",
+        createdAt: serverTimestamp(),
+      });
+      setReview("");
+    } catch (err) {
+      console.error("Error posting review:", err);
+    }
+  };
+
   if (loading) {
-    return <div>{t('Loading...')}</div>;  
+    return <div>{t('Loading...')}</div>;
   }
 
   const productImages = Array.isArray(productData?.images) && productData?.images.length > 0
@@ -132,15 +167,18 @@ function Detail() {
                 {t('By')} <a href="#" className="text-green-600 hover:underline dark:text-green-400">{productData?.username || t('Unknown Seller')}</a>
               </p>
 
-              {productData?.category === "car_parts" && (
-  <div className="mt-4 text-gray-600 dark:text-gray-300 space-y-1">
-    <p><strong>{t('Manufacturer')}:</strong> {productData?.carManufacturer || t('N/A')}</p>
-    <p><strong>{t('Model')}:</strong> {productData?.carModel || t('N/A')}</p>
-    <p><strong>{t('Year')}:</strong> {productData?.carYear || t('N/A')}</p>
-    <p><strong>{t('Part Number')}:</strong> {productData?.partNumber || t('N/A')}</p> {/* 👈 Add this line */}
-  </div>
-)}
+              <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">
+                <strong>{t('Location')}:</strong> {productData?.location || t('N/A')}
+              </p>
 
+              {productData?.category === "car_parts" && (
+                <div className="mt-4 text-gray-600 dark:text-gray-300 space-y-1">
+                  <p><strong>{t('Manufacturer')}:</strong> {productData?.carManufacturer || t('N/A')}</p>
+                  <p><strong>{t('Model')}:</strong> {productData?.carModel || t('N/A')}</p>
+                  <p><strong>{t('Year')}:</strong> {productData?.carYear || t('N/A')}</p>
+                  <p><strong>{t('Part Number')}:</strong> {productData?.partNumber || t('N/A')}</p>
+                </div>
+              )}
 
               {productData?.category === "accessories" && (
                 <div className="mt-4 text-gray-600 dark:text-gray-300">
@@ -175,7 +213,57 @@ function Detail() {
               </div>
             </div>
           </div>
-        </div>
+
+          {/* Reviews Section */}
+<div className="mt-16">
+  <h3 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">{t('Reviews')}</h3>
+
+  {user ? (
+    <div className="mb-10 bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+      <textarea
+        value={review}
+        onChange={(e) => setReview(e.target.value)}
+        placeholder={t('Write your review here...')}
+        className="w-full p-4 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
+        rows={4}
+      />
+      <button
+        onClick={handlePostReview}
+        className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+      >
+        {t('Post Review')}
+      </button>
+    </div>
+  ) : (
+    <p className="text-gray-600 dark:text-gray-300">{t('Please log in to post a review.')}</p>
+  )}
+
+  {reviews.length > 0 ? (
+    <ul className="space-y-6">
+      {reviews.map((r) => (
+        <li key={r.id} className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md">
+          <div className="flex items-center space-x-4 mb-2">
+            <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-lg">
+              {r.username ? r.username.charAt(0).toUpperCase() : "U"}
+            </div>
+            <div>
+              <p className="font-semibold text-gray-800 dark:text-white">{r.username || "Anonymous"}</p>
+              {r.createdAt?.toDate && (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {r.createdAt.toDate().toLocaleString()}
+                </p>
+              )}
+            </div>
+          </div>
+          <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{r.text}</p>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p className="text-gray-500 dark:text-gray-400 mt-4">{t('No reviews yet.')}</p>
+  )}
+</div>
+    </div>
       </div>
     </div>
   );

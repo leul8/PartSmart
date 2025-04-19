@@ -283,8 +283,8 @@ function Navbar() {
                 <div className="flex flex-col items-center mt-2 space-y-2">
                   {!user ? (
                     <>
-                      <NavLink to="/login" onClick={() => setUserMenuOpen(false)}>{t('signin')}</NavLink>
-                      <NavLink to="/signup" onClick={() => setUserMenuOpen(false)}>{t('signup')}</NavLink>
+                      <NavLink to="/login" onClick={() => setUserMenuOpen(false)}>{t('Sign in')}</NavLink>
+                      <NavLink to="/signup" onClick={() => setUserMenuOpen(false)}>{t('Sign up')}</NavLink>
                     </>
                   ) : (
                     <>

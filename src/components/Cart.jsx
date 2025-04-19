@@ -93,7 +93,7 @@ function Cart({ onClose }) {
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">🛒 {t('your_cart')}</h2>
+          <h2 className="text-2xl font-bold">🛒 {t('Your cart')}</h2>
           <button
             className="text-xl hover:text-red-600"
             onClick={onClose} 
@@ -105,8 +105,8 @@ function Cart({ onClose }) {
         {/* Order confirmation */}
         {showConfirmation ? (
           <div className="text-center p-6 animate-fade-in">
-            <h2 className="text-xl font-semibold mb-4 text-green-600">🎉 {t('order_confirmed')}</h2>
-            <p className="text-sm text-gray-500 mb-4">{t('thank_you_message')}</p>
+            <h2 className="text-xl font-semibold mb-4 text-green-600">🎉 {t('Order Confirmed')}</h2>
+            <p className="text-sm text-gray-500 mb-4">{t('Thank you! you ordered: ')}</p>
             <ul className="text-left text-sm mb-6 max-h-48 overflow-y-auto">
               {checkedOutItems.map((item, i) => (
                 <li key={i}>
@@ -114,7 +114,7 @@ function Cart({ onClose }) {
                 </li>
               ))}
             </ul>
-            <p className="text-xs text-gray-400">{t('order_id')}: {orderId}</p>
+            <p className="text-xs text-gray-400">{t('order id')}: {orderId}</p>
           </div>
         ) : (
           <>
@@ -142,13 +142,13 @@ function Cart({ onClose }) {
                 </div>
               ))
             ) : (
-              <p className="text-center text-sm text-gray-500">{t('cart_empty_message')}</p>
+              <p className="text-center text-sm text-gray-500">{t('Your cart is empty')}</p>
             )}
 
             {/* Checkout Section */}
             <div className="border-t pt-6 mt-6">
               <div className="flex justify-between text-lg font-semibold">
-                <span>{t('subtotal')}:</span>
+                <span>{t('Total')}:</span>
                 <span>{subtotal.toFixed(2)} ETB</span>
               </div>
               <button
@@ -160,7 +160,7 @@ function Cart({ onClose }) {
                        : "bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 active:from-green-600 active:to-green-800 focus:outline-none focus:ring-4 focus:ring-green-200 focus:ring-opacity-50"
                        }`}
               >
-                {t('proceed_to_checkout')}
+                {t('Checkout')}
               </button>
 
               <p className="text-sm text-center mt-3">
@@ -168,7 +168,7 @@ function Cart({ onClose }) {
                   className="text-light-blue-600 hover:text-light-blue-800 bg-transparent border-2 border-light-blue-600 hover:bg-light-blue-100 focus:ring-2 focus:ring-light-blue-500 rounded-lg py-2 px-4 transition-all duration-300 ease-in-out"
                   onClick={onClose} 
                 >
-                  ← {t('continue_shopping')}
+                  ← {t('Continue shopping')}
                 </button>
               </p>
             </div>
